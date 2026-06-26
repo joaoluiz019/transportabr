@@ -1,6 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+// Client ID público (web). Fallback embutido porque o .env é gitignored e não
+// existe no build de deploy (ex.: Vercel) — sem isso o botão não apareceria lá.
+export const GOOGLE_CLIENT_ID =
+  import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+  '819927565471-3pdtqkb27koar7ftk0s9ueu01gnlk0br.apps.googleusercontent.com';
 
 let scriptPromise = null;
 function loadGsi() {

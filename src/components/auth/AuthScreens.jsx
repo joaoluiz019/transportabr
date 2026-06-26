@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Truck, Loader2 } from 'lucide-react';
-import GoogleButton from './GoogleButton';
+import GoogleButton, { GOOGLE_CLIENT_ID } from './GoogleButton';
 
 function Shell({ title, subtitle, children }) {
   return (
@@ -43,7 +43,7 @@ function SocialBlock({ onError }) {
       onError(e.message || 'Falha no login com Google');
     }
   };
-  if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) return null;
+  if (!GOOGLE_CLIENT_ID) return null;
   return (
     <div className="mt-6">
       <div className="relative my-4">
