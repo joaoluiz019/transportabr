@@ -19,7 +19,7 @@ O app nativo **não** acessa `localhost`. Antes de buildar para distribuição, 
 VITE_API_URL="https://api.seu-dominio.com"
 ```
 O backend NestJS já habilita CORS para qualquer origem. Em produção, recomenda-se também
-**habilitar SSL** no Postgres e usar `sslmode=require` (ver `server/.env`).
+**habilitar SSL** no Postgres e usar `sslmode=require` (ver `.env` do backend, em `../transportabr-backend`).
 
 ## 2. Build e sincronização
 ```

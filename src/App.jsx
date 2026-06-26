@@ -79,15 +79,11 @@ const AuthenticatedApp = () => {
 
 
 function App() {
-  // Sync system dark mode preference
+  // O app é desenhado para o tema claro (cartões brancos, cores slate). Garante
+  // que o modo escuro do sistema operacional não seja aplicado — senão o texto
+  // dos inputs fica branco sobre fundo branco.
   React.useEffect(() => {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const apply = (e) => {
-      document.documentElement.classList.toggle('dark', e.matches);
-    };
-    apply(mq);
-    mq.addEventListener('change', apply);
-    return () => mq.removeEventListener('change', apply);
+    document.documentElement.classList.remove('dark');
   }, []);
 
   return (
