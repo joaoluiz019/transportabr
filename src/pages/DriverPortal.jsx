@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import DeleteAccountDialog from '@/components/layout/DeleteAccountDialog';
 
 export default function DriverPortal() {
   const [ctx, setCtx] = useState(null);
@@ -314,6 +315,10 @@ export default function DriverPortal() {
               ))}
             </div>
           )}
+        </div>
+        {/* Excluir conta */}
+        <div className="pt-2 flex justify-center">
+          <DeleteAccountDialog className="flex items-center gap-2 text-xs text-rose-400 hover:text-rose-300 transition-colors select-none" />
         </div>
       </div>
 

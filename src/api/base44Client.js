@@ -70,6 +70,11 @@ const auth = {
   updateMe(data) {
     return apiFetch('/users/me', { method: 'PATCH', body: data });
   },
+  async deleteAccount() {
+    await apiFetch('/auth/account', { method: 'DELETE' });
+    clearToken();
+    disconnectSocket();
+  },
   logout(redirect = true) {
     clearToken();
     disconnectSocket();
