@@ -1,0 +1,88 @@
+{
+  "name": "Expense",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "ID da empresa (tenant)"
+    },
+    "vehicle_id": {
+      "type": "string",
+      "description": "ID do ve\u00edculo"
+    },
+    "vehicle_plate": {
+      "type": "string",
+      "description": "Placa do ve\u00edculo"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "maintenance",
+        "oil_change",
+        "tire",
+        "insurance",
+        "tax",
+        "fine",
+        "payroll",
+        "commission",
+        "travel_bonus",
+        "overnight",
+        "toll",
+        "bonus",
+        "body",
+        "financiamento",
+        "other"
+      ],
+      "description": "Tipo de despesa"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Valor da despesa"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Data da despesa"
+    },
+    "supplier": {
+      "type": "string",
+      "description": "Fornecedor"
+    },
+    "description": {
+      "type": "string",
+      "description": "Descri\u00e7\u00e3o adicional"
+    },
+    "mileage_at_service": {
+      "type": "number",
+      "description": "Quilometragem no momento do servi\u00e7o"
+    },
+    "next_service_mileage": {
+      "type": "number",
+      "description": "Pr\u00f3xima revis\u00e3o em km"
+    },
+    "next_service_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Pr\u00f3xima revis\u00e3o - data"
+    },
+    "tire_brand": {
+      "type": "string",
+      "description": "Marca do pneu"
+    },
+    "tire_model": {
+      "type": "string",
+      "description": "Modelo do pneu"
+    },
+    "tire_position": {
+      "type": "string",
+      "description": "Local de instala\u00e7\u00e3o do pneu (ex: Dianteiro Esquerdo)"
+    }
+  },
+  "required": [
+    "company_id",
+    "vehicle_id",
+    "type",
+    "amount",
+    "date"
+  ]
+}

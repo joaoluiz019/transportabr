@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\João Luiz\\\\Documents\\\\transportabr\\\\transportabr\" -Recurse -Directory)",
+      "Bash(Select-Object -First 30)",
+      "Bash(Format-Table FullName)",
+      "Bash(xargs cat)",
+      "Bash(xargs grep -l \"app\\\\|store\\\\|publish\\\\|native\\\\|mobile\\\\|bundle\\\\|package\")"
+    ]
+  }
+}

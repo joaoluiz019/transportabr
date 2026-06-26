@@ -1,0 +1,70 @@
+{
+  "name": "Vehicle",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "ID da empresa (tenant)"
+    },
+    "plate": {
+      "type": "string",
+      "description": "Placa do ve\u00edculo"
+    },
+    "model": {
+      "type": "string",
+      "description": "Modelo do ve\u00edculo"
+    },
+    "year": {
+      "type": "number",
+      "description": "Ano do ve\u00edculo"
+    },
+    "brand": {
+      "type": "string",
+      "description": "Marca do ve\u00edculo"
+    },
+    "mileage": {
+      "type": "number",
+      "description": "Quilometragem atual"
+    },
+    "driver_id": {
+      "type": "string",
+      "description": "ID do motorista vinculado"
+    },
+    "driver_name": {
+      "type": "string",
+      "description": "Nome do motorista vinculado"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "maintenance",
+        "inactive"
+      ],
+      "default": "active",
+      "description": "Status do ve\u00edculo"
+    },
+    "registration_expiry": {
+      "type": "string",
+      "format": "date",
+      "description": "Vencimento do emplacamento (licenciamento)"
+    },
+    "desired_km_per_liter": {
+      "type": "number",
+      "description": "Consumo desejado em km/L"
+    }
+  },
+  "required": [
+    "company_id",
+    "plate",
+    "model",
+    "brand"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

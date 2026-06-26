@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">TransportaBR</string>
+    <string name="title_activity_main">TransportaBR</string>
+    <string name="package_name">com.base69b029d8fcb18bdaa5bc7102.app</string>
+    <string name="custom_url_scheme">com.base69b029d8fcb18bdaa5bc7102.app</string>
+</resources>

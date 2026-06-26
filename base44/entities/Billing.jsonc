@@ -1,0 +1,49 @@
+{
+  "name": "Billing",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "ID da empresa (tenant)"
+    },
+    "vehicle_id": {
+      "type": "string",
+      "description": "ID do ve\u00edculo"
+    },
+    "vehicle_plate": {
+      "type": "string",
+      "description": "Placa do ve\u00edculo"
+    },
+    "client_name": {
+      "type": "string",
+      "description": "Nome do cliente"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Valor do faturamento"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Data do faturamento"
+    },
+    "destination": {
+      "type": "string",
+      "description": "Destino"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es"
+    }
+  },
+  "required": [
+    "company_id",
+    "vehicle_id",
+    "client_name",
+    "amount",
+    "date"
+  ],
+  "rls": {
+    "read": {}
+  }
+}

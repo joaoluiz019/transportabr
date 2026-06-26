@@ -1,0 +1,77 @@
+{
+  "name": "Fueling",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "ID da empresa (tenant)"
+    },
+    "vehicle_id": {
+      "type": "string",
+      "description": "ID do ve\u00edculo"
+    },
+    "vehicle_plate": {
+      "type": "string",
+      "description": "Placa do ve\u00edculo"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Data do abastecimento"
+    },
+    "mileage": {
+      "type": "number",
+      "description": "Quilometragem atual"
+    },
+    "liters": {
+      "type": "number",
+      "description": "Litros abastecidos"
+    },
+    "price_per_liter": {
+      "type": "number",
+      "description": "Pre\u00e7o por litro"
+    },
+    "total_cost": {
+      "type": "number",
+      "description": "Custo total"
+    },
+    "fuel_type": {
+      "type": "string",
+      "enum": [
+        "gasoline",
+        "ethanol",
+        "diesel",
+        "gnv"
+      ],
+      "description": "Tipo de combust\u00edvel"
+    },
+    "station": {
+      "type": "string",
+      "description": "Posto de combust\u00edvel"
+    },
+    "km_per_liter": {
+      "type": "number",
+      "description": "Km por litro calculado"
+    }
+  },
+  "required": [
+    "company_id",
+    "vehicle_id",
+    "date",
+    "liters",
+    "price_per_liter",
+    "total_cost"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {},
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "name": "Company",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nome da empresa"
+    },
+    "cnpj": {
+      "type": "string",
+      "description": "CNPJ da empresa"
+    },
+    "address": {
+      "type": "string",
+      "description": "Endere\u00e7o da empresa"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Telefone da empresa"
+    },
+    "owner_email": {
+      "type": "string",
+      "description": "Email do gestor propriet\u00e1rio"
+    }
+  },
+  "required": [
+    "name",
+    "cnpj",
+    "owner_email"
+  ],
+  "rls": {
+    "create": {
+      "data.owner_email": "{{user.email}}"
+    },
+    "read": {
+      "data.owner_email": "{{user.email}}"
+    },
+    "update": {
+      "data.owner_email": "{{user.email}}"
+    },
+    "delete": {
+      "data.owner_email": "{{user.email}}"
+    },
+    "write": {
+      "data.owner_email": "{{user.email}}"
+    }
+  }
+}

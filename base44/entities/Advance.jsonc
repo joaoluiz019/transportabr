@@ -1,0 +1,37 @@
+{
+  "name": "Advance",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "ID da empresa (tenant)"
+    },
+    "driver_id": {
+      "type": "string",
+      "description": "ID do motorista"
+    },
+    "driver_name": {
+      "type": "string",
+      "description": "Nome do motorista"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Valor do adiantamento"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Data do adiantamento"
+    },
+    "description": {
+      "type": "string",
+      "description": "Descricao do adiantamento"
+    }
+  },
+  "required": [
+    "company_id",
+    "driver_id",
+    "amount",
+    "date"
+  ]
+}
