@@ -1,6 +1,7 @@
 // Camada HTTP do frontend: fala com o backend NestJS (substitui o Base44).
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-const TOKEN_KEY = 'transportabr_token';
+// Fallback aponta para produção (o .env é gitignored e pode não existir no build de deploy).
+export const API_URL = import.meta.env.VITE_API_URL || 'https://api.transportabr.com.br';
+const TOKEN_KEY = '5Let7j3x7UqvZak';
 
 export const getToken = () => localStorage.getItem(TOKEN_KEY);
 export const setToken = (t) => localStorage.setItem(TOKEN_KEY, t);
