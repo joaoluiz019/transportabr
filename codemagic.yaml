@@ -74,9 +74,13 @@ workflows:
         script: npm install
       - name: Build web + add/sync Capacitor (iOS)
         script: |
+          set -e
           npm run build
-          [ -d ios ] || npx cap add ios
+          rm -rf ios            # garante recriação limpa (evita ios/ incompleto sem Podfile)
+          npx cap add ios
           npx cap sync ios
+          echo "--- Podfile gerado? ---"
+          find ios -name Podfile
       - name: Gerar ícones/splash nativos
         script: npx capacitor-assets generate --ios --iconBackgroundColor '#0f172a' --splashBackgroundColor '#0f172a'
       - name: Definir versão e build number (iOS)
