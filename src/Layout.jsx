@@ -122,7 +122,10 @@ export default function Layout({ children, currentPageName }) {
         </nav>
 
         {/* User footer */}
-        <div className="px-3 py-4 border-t border-slate-800">
+        <div
+          className="px-3 py-4 border-t border-slate-800"
+          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)' }}
+        >
           <div className="flex items-center gap-3 px-3 mb-2">
             <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-sm font-bold text-slate-300">
               {user?.full_name?.[0]?.toUpperCase() || 'U'}
@@ -177,8 +180,9 @@ export default function Layout({ children, currentPageName }) {
         </main>
       </div>
 
-      {/* Bottom Tab Nav — mobile only */}
-      <BottomNav currentPageName={currentPageName} />
+      {/* Bottom Tab Nav — mobile only. Escondida quando o menu lateral está aberto,
+          senão as tabs cobrem o rodapé da barra (incluindo "Excluir Conta"). */}
+      {!sidebarOpen && <BottomNav currentPageName={currentPageName} />}
     </div>
   );
 }
