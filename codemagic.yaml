@@ -88,7 +88,9 @@ workflows:
           agvtool new-version -all $(($LATEST + 1))
       - name: CocoaPods
         script: |
-          cd ios/App
+          POD_DIR="$(dirname "$(find ios -name Podfile | head -1)")"
+          echo "Podfile encontrado em: $POD_DIR"
+          cd "$POD_DIR"
           pod install
       - name: Configurar assinatura (cria certificado + profile se faltar)
         script: |
