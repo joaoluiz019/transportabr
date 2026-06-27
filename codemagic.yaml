@@ -79,8 +79,8 @@ workflows:
           rm -rf ios            # garante recriação limpa (evita ios/ incompleto sem Podfile)
           npx cap add ios
           npx cap sync ios
-          echo "--- Podfile gerado? ---"
-          find ios -name Podfile
+          echo "--- projeto iOS gerado (Capacitor 8 usa SPM, sem Podfile) ---"
+          ls -la ios/App
       - name: Gerar ícones/splash nativos
         script: npx capacitor-assets generate --ios --iconBackgroundColor '#0f172a' --splashBackgroundColor '#0f172a'
       - name: Definir versão e build number (iOS)
@@ -90,12 +90,6 @@ workflows:
           # build number = último publicado na App Store + 1 (evita rejeição por número repetido)
           LATEST=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APP_ID" 2>/dev/null || echo 0)
           agvtool new-version -all $(($LATEST + 1))
-      - name: CocoaPods
-        script: |
-          POD_DIR="$(dirname "$(find ios -name Podfile | head -1)")"
-          echo "Podfile encontrado em: $POD_DIR"
-          cd "$POD_DIR"
-          pod install
       - name: Configurar assinatura (cria certificado + profile se faltar)
         script: |
           keychain initialize
@@ -105,7 +99,7 @@ workflows:
       - name: Gerar IPA
         script: |
           xcode-project build-ipa \
-            --workspace "ios/App/App.xcworkspace" \
+            --project "ios/App/App.xcodeproj" \
             --scheme "$XCODE_SCHEME"
     artifacts:
       - build/ios/ipa/*.ipa
