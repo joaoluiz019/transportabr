@@ -1,0 +1,97 @@
+# Build na nuvem do app TransportaBR (Capacitor) — Android (.aab) e iOS (.ipa).
+# Coloque este arquivo na raiz do repositório do FRONTEND e conecte o repo no codemagic.io.
+#
+# ANTES de rodar, configure no painel do Codemagic (ver CODEMAGIC.md):
+#  - Android: faça upload de uma keystore com referência "transportabr_keystore".
+#  - iOS: crie a integração "App Store Connect API key" e referencie em integrations.
+#  - Bundle id / package: com.base69b029d8fcb18bdaa5bc7102.app (já é o appId do capacitor.config.ts).
+#
+# Obs.: VITE_API_URL e VITE_GOOGLE_CLIENT_ID já têm fallback embutido no código (produção),
+# então o build funciona mesmo sem defini-los aqui.
+
+workflows:
+  # ------------------------------------------------------------------ ANDROID
+  android:
+    name: TransportaBR Android
+    instance_type: linux_x2
+    max_build_duration: 60
+    environment:
+      android_signing:
+        - transportabr_keystore # nome da keystore cadastrada no Codemagic
+      vars:
+        PACKAGE_NAME: "com.base69b029d8fcb18bdaa5bc7102.app"
+      node: 20
+      java: 17
+    scripts:
+      - name: Instalar dependências
+        script: npm install
+      - name: Build web + sync Capacitor (Android)
+        script: |
+          npm run build
+          [ -d android ] || npx cap add android
+          npx cap sync android
+      - name: Gerar ícones/splash nativos
+        script: npx capacitor-assets generate --android --iconBackgroundColor '#0f172a' --iconBackgroundColorDark '#0f172a' --splashBackgroundColor '#0f172a' --splashBackgroundColorDark '#0f172a'
+      - name: Apontar o Android SDK
+        script: echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
+      - name: Gerar AAB assinado (release)
+        script: |
+          cd android
+          ./gradlew bundleRelease \
+            -Pandroid.injected.signing.store.file=$CM_KEYSTORE_PATH \
+            -Pandroid.injected.signing.store.password=$CM_KEYSTORE_PASSWORD \
+            -Pandroid.injected.signing.key.alias=$CM_KEY_ALIAS \
+            -Pandroid.injected.signing.key.password=$CM_KEY_PASSWORD
+    artifacts:
+      - android/app/build/outputs/**/*.aab
+      - android/app/build/outputs/**/*.apk
+    # publishing:  # opcional — publicar direto na Play Console
+    #   google_play:
+    #     credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS  # JSON da service account
+    #     track: internal
+
+  # ---------------------------------------------------------------------- iOS
+  ios:
+    name: TransportaBR iOS
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: codemagic_asc_api_key # nome da integração ASC API key no Codemagic
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.base69b029d8fcb18bdaa5bc7102.app
+      vars:
+        BUNDLE_ID: "com.base69b029d8fcb18bdaa5bc7102.app"
+        XCODE_SCHEME: "App"
+      node: 20
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Instalar dependências
+        script: npm install
+      - name: Build web + add/sync Capacitor (iOS)
+        script: |
+          npm run build
+          [ -d ios ] || npx cap add ios
+          npx cap sync ios
+      - name: Gerar ícones/splash nativos
+        script: npx capacitor-assets generate --ios --iconBackgroundColor '#0f172a' --splashBackgroundColor '#0f172a'
+      - name: CocoaPods
+        script: |
+          cd ios/App
+          pod install
+      - name: Aplicar perfis de assinatura
+        script: xcode-project use-profiles
+      - name: Gerar IPA
+        script: |
+          xcode-project build-ipa \
+            --workspace "ios/App/App.xcworkspace" \
+            --scheme "$XCODE_SCHEME"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    # publishing:  # opcional — enviar para o TestFlight automaticamente
+    #   app_store_connect:
+    #     auth: integration
+    #     submit_to_testflight: true
