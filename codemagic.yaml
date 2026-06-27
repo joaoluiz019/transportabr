@@ -94,10 +94,12 @@ workflows:
         script: |
           set -e
           keychain initialize
-          # Cria um certificado de distribuição NOVO (com chave privada própria).
-          # O certificado anterior (do Base44) não tem a chave privada disponível aqui.
-          app-store-connect create-certificate --type IOS_DISTRIBUTION --save
-          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --create
+          # Cria/reutiliza o certificado de distribuição a partir da SUA chave privada
+          # (CERTIFICATE_PRIVATE_KEY, cadastrada no Codemagic). Reutilizável entre builds.
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --certificate-key=@env:CERTIFICATE_PRIVATE_KEY \
+            --create
           keychain add-certificates
           xcode-project use-profiles
       - name: Gerar IPA
