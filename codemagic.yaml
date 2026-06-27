@@ -92,6 +92,7 @@ workflows:
           agvtool new-version -all $(($LATEST + 1))
       - name: Configurar assinatura (cria certificado + profile)
         script: |
+          set -e
           keychain initialize
           # Cria um certificado de distribuição NOVO (com chave privada própria).
           # O certificado anterior (do Base44) não tem a chave privada disponível aqui.
