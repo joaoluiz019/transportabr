@@ -16,8 +16,9 @@ workflows:
     instance_type: linux_x2
     max_build_duration: 60
     environment:
-      android_signing:
-        - transportabr_keystore # nome da keystore cadastrada no Codemagic
+      groups:
+        # Grupo com: CM_KEYSTORE (keystore .jks em base64), CM_KEYSTORE_PASSWORD, CM_KEY_ALIAS, CM_KEY_PASSWORD
+        - android_credentials
       vars:
         PACKAGE_NAME: "com.base69b029d8fcb18bdaa5bc7102.app"
       node: 22
@@ -34,14 +35,16 @@ workflows:
         script: npx capacitor-assets generate --android --iconBackgroundColor '#0f172a' --iconBackgroundColorDark '#0f172a' --splashBackgroundColor '#0f172a' --splashBackgroundColorDark '#0f172a'
       - name: Apontar o Android SDK
         script: echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
+      - name: Decodificar keystore
+        script: echo "$CM_KEYSTORE" | base64 --decode > /tmp/transportabr.jks
       - name: Gerar AAB assinado (release)
         script: |
           cd android
           ./gradlew bundleRelease \
-            -Pandroid.injected.signing.store.file=$CM_KEYSTORE_PATH \
-            -Pandroid.injected.signing.store.password=$CM_KEYSTORE_PASSWORD \
-            -Pandroid.injected.signing.key.alias=$CM_KEY_ALIAS \
-            -Pandroid.injected.signing.key.password=$CM_KEY_PASSWORD
+            -Pandroid.injected.signing.store.file=/tmp/transportabr.jks \
+            -Pandroid.injected.signing.store.password="$CM_KEYSTORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$CM_KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$CM_KEY_PASSWORD"
     artifacts:
       - android/app/build/outputs/**/*.aab
       - android/app/build/outputs/**/*.apk
