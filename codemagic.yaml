@@ -40,6 +40,7 @@ workflows:
       - name: Gerar AAB assinado (release)
         script: |
           cd android
+          chmod +x ./gradlew
           ./gradlew bundleRelease \
             -Pandroid.injected.signing.store.file=/tmp/transportabr.jks \
             -Pandroid.injected.signing.store.password="$CM_KEYSTORE_PASSWORD" \
