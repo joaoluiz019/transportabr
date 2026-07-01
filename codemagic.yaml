@@ -22,7 +22,7 @@ workflows:
       vars:
         PACKAGE_NAME: "com.base69b029d8fcb18bdaa5bc7102.app"
       node: 22
-      java: 17
+      java: 21
     scripts:
       - name: Instalar dependências
         script: npm install
