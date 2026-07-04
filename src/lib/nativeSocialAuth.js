@@ -14,7 +14,11 @@ const GOOGLE_WEB_CLIENT_ID =
 
 // Client ID do tipo **iOS** criado no Google Cloud Console (bundle
 // com.base69b029d8fcb18bdaa5bc7102.app). Sem ele o login Google no iPhone falha.
-const GOOGLE_IOS_CLIENT_ID = import.meta.env.VITE_GOOGLE_IOS_CLIENT_ID || '';
+// Fallback embutido porque o .env é gitignored e não existe no build do Codemagic
+// (mesma lógica do client web em GoogleButton.jsx). É um ID público, não é segredo.
+const GOOGLE_IOS_CLIENT_ID =
+  import.meta.env.VITE_GOOGLE_IOS_CLIENT_ID ||
+  '819927565471-omdr1kdr1e7tos9c56ggnu44k2tr8ga3.apps.googleusercontent.com';
 
 // Sign in with Apple: no iOS nativo o "aud" do token é o bundle id do app.
 const APPLE_CLIENT_ID =
@@ -36,8 +40,16 @@ async function ensureInit() {
   return initPromise;
 }
 
+/** true quando o login Google nativo tem as credenciais mínimas configuradas. */
+export const isNativeGoogleConfigured = !isNative || !!GOOGLE_IOS_CLIENT_ID;
+
 /** Abre a tela nativa do Google e devolve o idToken (JWT) para o backend. */
 export async function nativeGoogleSignIn() {
+  // Sem o client ID iOS o SDK nativo do Google faz fatalError e derruba o app.
+  // Barramos antes para exibir uma mensagem em vez de crashar.
+  if (isNative && !GOOGLE_IOS_CLIENT_ID) {
+    throw new Error('Login Google não configurado neste app (falta o Client ID iOS).');
+  }
   const SocialLogin = await ensureInit();
   const { result } = await SocialLogin.login({
     provider: 'google',

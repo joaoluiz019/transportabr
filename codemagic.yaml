@@ -78,14 +78,17 @@ workflows:
     scripts:
       - name: Instalar dependências
         script: npm install
-      - name: Build web + add/sync Capacitor (iOS)
+      - name: Build web + sync Capacitor (iOS)
         script: |
           set -e
           npm run build
-          rm -rf ios            # garante recriação limpa (evita ios/ incompleto sem Podfile)
-          npx cap add ios
+          # NÃO apagar ios/: a pasta está no git com o Sign in with Apple
+          # (App/App.entitlements + CODE_SIGN_ENTITLEMENTS no pbxproj) e o URL
+          # scheme do Google (CFBundleURLTypes no Info.plist). Recriar do zero
+          # com "cap add ios" removeria essas configs e quebraria o login social.
+          # Só cria se a pasta não existir (primeiro build de um repo limpo).
+          [ -d ios ] || npx cap add ios
           npx cap sync ios
-          echo "--- projeto iOS gerado (Capacitor 8 usa SPM, sem Podfile) ---"
           ls -la ios/App
       - name: Gerar ícones/splash nativos
         script: npx capacitor-assets generate --ios --iconBackgroundColor '#0f172a' --splashBackgroundColor '#0f172a'
