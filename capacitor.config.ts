@@ -10,7 +10,9 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 1200,
+      // Não esconder automaticamente: o splash nativo (estático) fica até o app
+      // web chamar SplashScreen.hide(), evitando flash branco antes do GIF animado.
+      launchAutoHide: false,
       backgroundColor: '#0f172a',
       showSpinner: false,
     },
