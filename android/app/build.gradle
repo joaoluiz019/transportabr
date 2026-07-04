@@ -7,7 +7,9 @@ android {
         applicationId "com.base69b029d8fcb18bdaa5bc7102.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
+        // versionCode pode ser injetado pelo CI (-PversionCode=$BUILD_NUMBER);
+        // fallback = 2 para builds locais.
+        versionCode project.hasProperty('versionCode') ? project.versionCode.toInteger() : 2
         versionName "1.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
