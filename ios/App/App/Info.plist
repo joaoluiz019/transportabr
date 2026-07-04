@@ -47,5 +47,16 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<!-- Login Google nativo: substitua pelo REVERSED_CLIENT_ID do seu
+	     GoogleService/OAuth client iOS (ex.: com.googleusercontent.apps.XXXX-YYYY). -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.SUBSTITUA_PELO_REVERSED_CLIENT_ID</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

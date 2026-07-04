@@ -96,6 +96,11 @@ workflows:
           # build number = contador de build do Codemagic (sempre incrementa a cada build,
           # então nunca repete um número já enviado à App Store).
           agvtool new-version -all "$BUILD_NUMBER"
+          # Export compliance: declara que o app não usa criptografia não isenta.
+          # Sem isso, todo build fica preso em "Processing" aguardando resposta manual,
+          # e o passo de distribuição/TestFlight do Codemagic trava até dar timeout.
+          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" App/Info.plist \
+            || /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" App/Info.plist
       - name: Configurar assinatura (cria certificado + profile)
         script: |
           set -e
@@ -121,6 +126,6 @@ workflows:
         api_key: $APP_STORE_CONNECT_PRIVATE_KEY
         key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
         issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-        submit_to_testflight: true
+        submit_to_testflight: false
         # Para enviar direto à revisão da App Store (exige metadados/screenshots prontos no App Store Connect):
         # submit_to_app_store: true
