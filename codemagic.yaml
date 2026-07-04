@@ -92,9 +92,9 @@ workflows:
         script: |
           cd ios/App
           agvtool new-marketing-version "$MARKETING_VERSION"
-          # build number = último publicado na App Store + 1 (evita rejeição por número repetido)
-          LATEST=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APP_ID" 2>/dev/null || echo 0)
-          agvtool new-version -all $(($LATEST + 1))
+          # build number = contador de build do Codemagic (sempre incrementa a cada build,
+          # então nunca repete um número já enviado à App Store).
+          agvtool new-version -all "$BUILD_NUMBER"
       - name: Configurar assinatura (cria certificado + profile)
         script: |
           set -e
