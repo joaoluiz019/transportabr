@@ -70,7 +70,7 @@ workflows:
       vars:
         BUNDLE_ID: "com.base69b029d8fcb18bdaa5bc7102.app"
         XCODE_SCHEME: "App"
-        MARKETING_VERSION: "1.1" # versão visível na loja — suba a cada release
+        MARKETING_VERSION: "2.0" # versão visível na loja — suba a cada release
         APP_STORE_APP_ID: "PREENCHER" # ID numérico do app no App Store Connect
       node: 22
       xcode: latest

@@ -10,7 +10,7 @@ android {
         // versionCode pode ser injetado pelo CI (-PversionCode=$BUILD_NUMBER);
         // fallback = 2 para builds locais.
         versionCode project.hasProperty('versionCode') ? project.versionCode.toInteger() : 2
-        versionName "1.1"
+        versionName "2.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
