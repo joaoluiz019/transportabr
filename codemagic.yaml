@@ -10,6 +10,72 @@
 # então o build funciona mesmo sem defini-los aqui.
 
 workflows:
+  # -------------------------------------------------- ANDROID (App preview)
+  # Gera um APK de DEBUG (não assinado, sem publicação) para usar no
+  # "App preview" do Codemagic. Rápido, sem keystore.
+  android-preview:
+    name: TransportaBR Android (preview/debug)
+    instance_type: linux_x2
+    max_build_duration: 45
+    environment:
+      vars:
+        PACKAGE_NAME: "com.base69b029d8fcb18bdaa5bc7102.app"
+      node: 22
+      java: 21
+    scripts:
+      - name: Instalar dependências
+        script: npm install
+      - name: Build web + sync Capacitor (Android)
+        script: |
+          npm run build
+          [ -d android ] || npx cap add android
+          npx cap sync android
+      - name: Apontar o Android SDK
+        script: echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
+      - name: Build Android (debug)
+        script: |
+          cd android
+          chmod +x ./gradlew
+          ./gradlew assembleDebug
+    artifacts:
+      - android/app/build/outputs/apk/debug/*.apk
+
+  # ------------------------------------------------------ iOS (App preview)
+  # Compila para o SIMULADOR (SDK iphonesimulator), sem assinatura, gerando
+  # um .app que o "App preview" do Codemagic roda no navegador.
+  ios-simulator:
+    name: TransportaBR iOS (simulador/preview)
+    instance_type: mac_mini_m2
+    max_build_duration: 45
+    environment:
+      vars:
+        XCODE_SCHEME: "App"
+      node: 22
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Instalar dependências
+        script: npm install
+      - name: Build web + sync Capacitor (iOS)
+        script: |
+          set -e
+          npm run build
+          [ -d ios ] || npx cap add ios
+          npx cap sync ios
+      - name: Build para o simulador (sem assinatura)
+        script: |
+          set -e
+          xcodebuild build \
+            -project "ios/App/App.xcodeproj" \
+            -scheme "$XCODE_SCHEME" \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO
+    artifacts:
+      # O .app do simulador que alimenta o App preview do Codemagic.
+      - build/Build/Products/Debug-iphonesimulator/*.app
+
   # ------------------------------------------------------------------ ANDROID
   android:
     name: TransportaBR Android
