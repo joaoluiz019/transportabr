@@ -6,7 +6,6 @@ import {
   LayoutDashboard, Truck, Users, Receipt, Fuel, FileText,
   BarChart3, Database, Menu, X, LogOut, Building2, ChevronRight, ArrowLeft, HandCoins
 } from 'lucide-react';
-import { Button } from "@/components/ui/button";
 import BottomNav from './components/layout/BottomNav';
 import DeleteAccountDialog from './components/layout/DeleteAccountDialog';
 
@@ -25,34 +24,56 @@ const navItems = [
 const BOTTOM_NAV_PAGES = ['Dashboard', 'Vehicles', 'Drivers', 'Expenses', 'Reports'];
 const NO_LAYOUT_PAGES = ['CompanySetup', 'DriverInviteAccept', 'DriverPortal'];
 
+// Páginas que um motorista (role='driver') pode acessar. Qualquer outra rota é
+// redirecionada para o portal do motorista.
+const DRIVER_ALLOWED_PAGES = ['DriverPortal', 'DriverInviteAccept'];
+
 export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [company, setCompany] = useState(null);
   const [user, setUser] = useState(null);
+  const [checking, setChecking] = useState(true);
+  const [isDriver, setIsDriver] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
+    let cancelled = false;
     async function load() {
       try {
         const me = await base44.auth.me();
+        if (cancelled) return;
         setUser(me);
-        // Redireciona para o DriverPortal se o usuário tiver um Driver cadastrado com seu email
-        const drivers = await base44.entities.Driver.filter({ email: me.email });
-        if (drivers.length > 0) {
-          if (currentPageName !== 'DriverPortal' && currentPageName !== 'DriverInviteAccept') {
-            navigate(createPageUrl('DriverPortal'));
+        // Controle de acesso por role: motorista só acessa o ambiente do motorista.
+        if (me.role === 'driver') {
+          setIsDriver(true);
+          if (!DRIVER_ALLOWED_PAGES.includes(currentPageName)) {
+            navigate(createPageUrl('DriverPortal'), { replace: true });
           }
           return;
         }
         const companies = await base44.entities.Company.filter({ owner_email: me.email });
-        if (companies.length > 0) setCompany(companies[0]);
+        if (!cancelled && companies.length > 0) setCompany(companies[0]);
       } catch (e) { /* not logged in */ }
+      finally {
+        if (!cancelled) setChecking(false);
+      }
     }
     load();
+    return () => { cancelled = true; };
   }, [currentPageName]);
 
   if (NO_LAYOUT_PAGES.includes(currentPageName)) {
     return <>{children}</>;
+  }
+
+  // Enquanto resolvemos o perfil, evita o "flash" da tela de admin — e, se o
+  // usuário for motorista numa rota de admin, não renderiza nada até o redirect.
+  if (checking || isDriver) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
   }
 
   const isDashboard = currentPageName === 'Dashboard';
