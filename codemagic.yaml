@@ -101,6 +101,23 @@ workflows:
         script: npx capacitor-assets generate --android --iconBackgroundColor '#0f172a' --iconBackgroundColorDark '#0f172a' --splashBackgroundColor '#0f172a' --splashBackgroundColorDark '#0f172a'
       - name: Apontar o Android SDK
         script: echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
+      - name: Calcular versionCode (maior na Play + 1)
+        script: |
+          set -e
+          # Pergunta ao Google Play qual o maior versionCode já enviado (em qualquer track)
+          # e usa esse valor + 1. Assim nunca colide com um código já usado, independente
+          # do $BUILD_NUMBER do Codemagic.
+          CREDS="$GCLOUD_SERVICE_ACCOUNT_CREDENTIALS"
+          [ -n "$CREDS" ] || CREDS="$GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS"
+          LATEST=$(echo "$CREDS" | google-play get-latest-build-number \
+            --package-name "$PACKAGE_NAME" \
+            --credentials @stdin) || LATEST=""
+          # Fallback: se a consulta falhar, usa o $BUILD_NUMBER (ainda pode colidir,
+          # mas evita travar a build por falha de rede/credencial).
+          [ -n "$LATEST" ] || LATEST="$BUILD_NUMBER"
+          NEW_CODE=$((LATEST + 1))
+          echo "VERSION_CODE=$NEW_CODE" >> "$CM_ENV"
+          echo "Maior versionCode na Play: $LATEST -> usando $NEW_CODE"
       - name: Decodificar keystore
         script: echo "$CM_KEYSTORE" | base64 --decode > /tmp/transportabr.jks
       - name: Gerar AAB assinado (release)
@@ -108,7 +125,7 @@ workflows:
           cd android
           chmod +x ./gradlew
           ./gradlew bundleRelease \
-            -PversionCode=$BUILD_NUMBER \
+            -PversionCode=$VERSION_CODE \
             -Pandroid.injected.signing.store.file=/tmp/transportabr.jks \
             -Pandroid.injected.signing.store.password="$CM_KEYSTORE_PASSWORD" \
             -Pandroid.injected.signing.key.alias="$CM_KEY_ALIAS" \
