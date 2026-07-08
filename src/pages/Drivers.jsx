@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useCompany } from '../components/hooks/useCompany';
+import { usePageData } from '../components/hooks/usePageData';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import EmptyState from '../components/shared/EmptyState';
@@ -19,8 +20,17 @@ import InviteLinkDialog from '../components/drivers/InviteLinkDialog';
 export default function Drivers() {
   const { company, loading: compLoading } = useCompany();
   const navigate = useNavigate();
-  const [drivers, setDrivers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isPending, refetch, makeSetter } = usePageData('drivers', company, async () => {
+    const [d, v] = await Promise.all([
+      base44.entities.Driver.filter({ company_id: company.id }),
+      base44.entities.Vehicle.filter({ company_id: company.id }),
+    ]);
+    return { drivers: d, vehicles: v };
+  });
+  const drivers = data?.drivers ?? [];
+  const vehicles = data?.vehicles ?? [];
+  const setDrivers = makeSetter('drivers');
+  const loadData = refetch;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [editingDriver, setEditingDriver] = useState(null);
@@ -28,7 +38,6 @@ export default function Drivers() {
   const [inviteEmail, setInviteEmail] = useState('');
   const [sending, setSending] = useState(false);
   const [inviteLinkDriver, setInviteLinkDriver] = useState(null);
-  const [vehicles, setVehicles] = useState([]);
   const [form, setForm] = useState({
     name: '', email: '', phone: '', cnh: '', cnh_expiry: '', toxicological_expiry: '', commission_percent: '', vehicle_id: '', status: 'active'
   });
@@ -36,21 +45,6 @@ export default function Drivers() {
   useEffect(() => {
     if (!compLoading && !company) navigate(createPageUrl('CompanySetup'));
   }, [compLoading, company, navigate]);
-
-  useEffect(() => {
-    if (!company) return;
-    loadData();
-  }, [company]);
-
-  const loadData = async () => {
-    const [d, v] = await Promise.all([
-      base44.entities.Driver.filter({ company_id: company.id }),
-      base44.entities.Vehicle.filter({ company_id: company.id }),
-    ]);
-    setDrivers(d);
-    setVehicles(v);
-    setLoading(false);
-  };
 
   const openNew = () => {
     setEditingDriver(null);
@@ -148,7 +142,7 @@ export default function Drivers() {
     d.email?.toLowerCase().includes(search.toLowerCase())
   );
 
-  if (compLoading || loading) {
+  if (compLoading || isPending) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />

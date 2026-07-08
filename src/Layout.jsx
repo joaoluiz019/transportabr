@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import BottomNav from './components/layout/BottomNav';
 import DeleteAccountDialog from './components/layout/DeleteAccountDialog';
+import { useAuth } from '@/lib/AuthContext';
+import { useCompany } from './components/hooks/useCompany';
 
 const navItems = [
   { name: 'Dashboard', page: 'Dashboard', icon: LayoutDashboard },
@@ -30,45 +32,27 @@ const DRIVER_ALLOWED_PAGES = ['DriverPortal', 'DriverInviteAccept'];
 
 export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [company, setCompany] = useState(null);
-  const [user, setUser] = useState(null);
-  const [checking, setChecking] = useState(true);
-  const [isDriver, setIsDriver] = useState(false);
+  const { user } = useAuth(); // já carregado pelo AuthContext — sem re-fetch por rota
+  const { company } = useCompany(); // cacheado via React Query — compartilhado com as páginas
   const navigate = useNavigate();
 
+  const isDriver = user?.role === 'driver';
+  const driverOnAdminRoute = isDriver && !DRIVER_ALLOWED_PAGES.includes(currentPageName);
+
+  // Controle de acesso por role: motorista só acessa o ambiente do motorista.
   useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const me = await base44.auth.me();
-        if (cancelled) return;
-        setUser(me);
-        // Controle de acesso por role: motorista só acessa o ambiente do motorista.
-        if (me.role === 'driver') {
-          setIsDriver(true);
-          if (!DRIVER_ALLOWED_PAGES.includes(currentPageName)) {
-            navigate(createPageUrl('DriverPortal'), { replace: true });
-          }
-          return;
-        }
-        const companies = await base44.entities.Company.filter({ owner_email: me.email });
-        if (!cancelled && companies.length > 0) setCompany(companies[0]);
-      } catch (e) { /* not logged in */ }
-      finally {
-        if (!cancelled) setChecking(false);
-      }
+    if (driverOnAdminRoute) {
+      navigate(createPageUrl('DriverPortal'), { replace: true });
     }
-    load();
-    return () => { cancelled = true; };
-  }, [currentPageName]);
+  }, [driverOnAdminRoute, navigate]);
 
   if (NO_LAYOUT_PAGES.includes(currentPageName)) {
     return <>{children}</>;
   }
 
-  // Enquanto resolvemos o perfil, evita o "flash" da tela de admin — e, se o
-  // usuário for motorista numa rota de admin, não renderiza nada até o redirect.
-  if (checking || isDriver) {
+  // Motorista numa rota de admin: não renderiza a UI de admin até o redirect
+  // concluir (evita flash da tela errada).
+  if (driverOnAdminRoute) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50">
         <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />

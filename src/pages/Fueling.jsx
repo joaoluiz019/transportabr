@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useCompany } from '../components/hooks/useCompany';
+import { usePageData } from '../components/hooks/usePageData';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import DatePlateFilter from '../components/shared/DatePlateFilter';
@@ -20,9 +21,17 @@ const fuelLabels = { gasoline: 'Gasolina', ethanol: 'Etanol', diesel: 'Diesel', 
 export default function FuelingPage() {
   const { company, loading: compLoading } = useCompany();
   const navigate = useNavigate();
-  const [fuelings, setFuelings] = useState([]);
-  const [vehicles, setVehicles] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isPending, refetch, makeSetter } = usePageData('fuelings', company, async () => {
+    const [f, v] = await Promise.all([
+      base44.entities.Fueling.filter({ company_id: company.id }),
+      base44.entities.Vehicle.filter({ company_id: company.id }),
+    ]);
+    return { fuelings: f, vehicles: v };
+  });
+  const fuelings = data?.fuelings ?? [];
+  const vehicles = data?.vehicles ?? [];
+  const setFuelings = makeSetter('fuelings');
+  const loadData = refetch;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const now = new Date();
@@ -38,21 +47,6 @@ export default function FuelingPage() {
   useEffect(() => {
     if (!compLoading && !company) navigate(createPageUrl('CompanySetup'));
   }, [compLoading, company, navigate]);
-
-  useEffect(() => {
-    if (!company) return;
-    loadData();
-  }, [company]);
-
-  const loadData = async () => {
-    const [f, v] = await Promise.all([
-      base44.entities.Fueling.filter({ company_id: company.id }),
-      base44.entities.Vehicle.filter({ company_id: company.id }),
-    ]);
-    setFuelings(f);
-    setVehicles(v);
-    setLoading(false);
-  };
 
   const calcTotal = () => {
     const l = parseFloat(form.liters) || 0;
@@ -143,7 +137,7 @@ export default function FuelingPage() {
   const totalCost = filtered.reduce((s, f) => s + (f.total_cost || 0), 0);
   const fmt = (n) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-  if (compLoading || loading) {
+  if (compLoading || isPending) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />

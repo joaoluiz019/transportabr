@@ -1,16 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useNavigate, Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useCompany } from '../components/hooks/useCompany';
-import StatCard from '../components/shared/StatCard';
+import { usePageData } from '../components/hooks/usePageData';
 import PullToRefresh from '../components/layout/PullToRefresh';
 import {
   Truck, Users, Receipt, Fuel, FileText, BarChart3,
-  Database, AlertTriangle, Loader2, ArrowRight, TrendingUp,
+  Database, AlertTriangle, Loader2, ArrowRight,
   HandCoins
 } from 'lucide-react';
-import { Button } from "@/components/ui/button";
 import NotificationBell from '../components/dashboard/NotificationBell';
 
 const shortcuts = [
@@ -27,11 +26,6 @@ const shortcuts = [
 export default function Dashboard() {
   const { company, loading } = useCompany();
   const navigate = useNavigate();
-  const [stats, setStats] = useState({
-    vehicles: 0, drivers: 0, totalExpenses: 0,
-    totalBilling: 0, totalFueling: 0, alerts: []
-  });
-  const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
     if (!loading && !company) {
@@ -39,48 +33,42 @@ export default function Dashboard() {
     }
   }, [loading, company, navigate]);
 
-  const loadStats = useCallback(async () => {
-    if (!company) return;
-      const delay = (ms) => new Promise(r => setTimeout(r, ms));
-      const vehicles = await base44.entities.Vehicle.filter({ company_id: company.id });
-      await delay(200);
-      const drivers = await base44.entities.Driver.filter({ company_id: company.id });
-      await delay(200);
-      const expenses = await base44.entities.Expense.filter({ company_id: company.id });
-      await delay(200);
-      const billings = await base44.entities.Billing.filter({ company_id: company.id });
-      await delay(200);
-      const fuelings = await base44.entities.Fueling.filter({ company_id: company.id });
+  const { data: stats = {
+    vehicles: 0, drivers: 0, totalExpenses: 0,
+    totalBilling: 0, totalFueling: 0, alerts: []
+  }, refetch: loadStats } = usePageData('dashboard-stats', company, async () => {
+    const [vehicles, drivers, expenses, billings, fuelings] = await Promise.all([
+      base44.entities.Vehicle.filter({ company_id: company.id }),
+      base44.entities.Driver.filter({ company_id: company.id }),
+      base44.entities.Expense.filter({ company_id: company.id }),
+      base44.entities.Billing.filter({ company_id: company.id }),
+      base44.entities.Fueling.filter({ company_id: company.id }),
+    ]);
 
-      const totalExpenses = expenses.reduce((s, e) => s + (e.amount || 0), 0);
-      const totalBilling = billings.reduce((s, b) => s + (b.amount || 0), 0);
-      const totalFueling = fuelings.reduce((s, f) => s + (f.total_cost || 0), 0);
+    const totalExpenses = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+    const totalBilling = billings.reduce((s, b) => s + (b.amount || 0), 0);
+    const totalFueling = fuelings.reduce((s, f) => s + (f.total_cost || 0), 0);
 
-      // Build alerts
-      const alerts = [];
-      expenses.forEach(exp => {
-        if (exp.next_service_date) {
-          const diff = Math.ceil((new Date(exp.next_service_date) - new Date()) / (1000 * 60 * 60 * 24));
-          if (diff <= 30 && diff > 0) {
-            alerts.push({ type: 'service', plate: exp.vehicle_plate, days: diff });
-          }
+    // Build alerts
+    const alerts = [];
+    expenses.forEach(exp => {
+      if (exp.next_service_date) {
+        const diff = Math.ceil((new Date(exp.next_service_date) - new Date()) / (1000 * 60 * 60 * 24));
+        if (diff <= 30 && diff > 0) {
+          alerts.push({ type: 'service', plate: exp.vehicle_plate, days: diff });
         }
-      });
+      }
+    });
 
-      setStats({
-        vehicles: vehicles.length,
-        drivers: drivers.length,
-        totalExpenses,
-        totalBilling,
-        totalFueling,
-        alerts
-      });
-      setLoadingStats(false);
-  }, [company]);
-
-  useEffect(() => {
-    loadStats();
-  }, [loadStats]);
+    return {
+      vehicles: vehicles.length,
+      drivers: drivers.length,
+      totalExpenses,
+      totalBilling,
+      totalFueling,
+      alerts,
+    };
+  });
 
   if (loading || !company) {
     return (
@@ -89,8 +77,6 @@ export default function Dashboard() {
       </div>
     );
   }
-
-  const fmt = (n) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
   return (
     <PullToRefresh onRefresh={loadStats}>

@@ -27,32 +27,33 @@ const PageTransition = ({ children }) => (
 
 const AnimatedRoutes = ({ Pages, Layout, mainPageKey, MainPage }) => {
   const location = useLocation();
-  const LayoutWrapper = ({ children, currentPageName }) => Layout ?
-    <Layout currentPageName={currentPageName}>{children}</Layout>
-    : <>{children}</>;
+  // Nome da página atual derivado da rota. O Layout fica montado de forma
+  // persistente (fora do <AnimatePresence>), então não re-monta a cada
+  // navegação — apenas o conteúdo da página anima. Isso elimina a "piscada".
+  const currentPageName =
+    location.pathname === '/' ? mainPageKey : location.pathname.slice(1);
+  const LayoutWrapper = Layout
+    ? ({ children }) => <Layout currentPageName={currentPageName}>{children}</Layout>
+    : ({ children }) => <>{children}</>;
 
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        <Route path="/" element={
-          <LayoutWrapper currentPageName={mainPageKey}>
+    <LayoutWrapper>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route path="/" element={
             <PageTransition><MainPage /></PageTransition>
-          </LayoutWrapper>
-        } />
-        {Object.entries(Pages).map(([path, Page]) => (
-          <Route
-            key={path}
-            path={`/${path}`}
-            element={
-              <LayoutWrapper currentPageName={path}>
-                <PageTransition><Page /></PageTransition>
-              </LayoutWrapper>
-            }
-          />
-        ))}
-        <Route path="*" element={<PageNotFound />} />
-      </Routes>
-    </AnimatePresence>
+          } />
+          {Object.entries(Pages).map(([path, Page]) => (
+            <Route
+              key={path}
+              path={`/${path}`}
+              element={<PageTransition><Page /></PageTransition>}
+            />
+          ))}
+          <Route path="*" element={<PageNotFound />} />
+        </Routes>
+      </AnimatePresence>
+    </LayoutWrapper>
   );
 };
 

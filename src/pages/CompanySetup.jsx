@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -9,6 +10,7 @@ import { Truck, Building2, ArrowRight, Loader2 } from 'lucide-react';
 
 export default function CompanySetup() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -45,7 +47,11 @@ export default function CompanySetup() {
       ...form,
       owner_email: me.email
     });
-    
+
+    // Popula o cache de useCompany imediatamente para o Dashboard não redirecionar
+    // de volta para cá (o cache ainda teria `null` da verificação inicial).
+    queryClient.setQueryData(['company', me.email], company);
+
     navigate(createPageUrl('Dashboard'));
   };
 

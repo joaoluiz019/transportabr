@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
+import { useQueryClient } from '@tanstack/react-query';
 import { useCompany } from '../components/hooks/useCompany';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -13,6 +14,7 @@ import { toast } from "sonner";
 export default function Backup() {
   const { company, loading: compLoading } = useCompany();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef(null);
@@ -134,6 +136,10 @@ export default function Backup() {
     if (data.expenses?.length) await base44.entities.Expense.bulkCreate(data.expenses.map(cleanRecord));
     if (data.fuelings?.length) await base44.entities.Fueling.bulkCreate(data.fuelings.map(cleanRecord));
     if (data.billings?.length) await base44.entities.Billing.bulkCreate(data.billings.map(cleanRecord));
+
+    // Backup substitui todos os dados — invalida os caches das páginas para que
+    // Dashboard/Veículos/etc. recarreguem em vez de mostrar o cache antigo.
+    queryClient.invalidateQueries();
 
     setImporting(false);
     toast.success('Dados importados com sucesso!');

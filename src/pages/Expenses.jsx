@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useCompany } from '../components/hooks/useCompany';
+import { usePageData } from '../components/hooks/usePageData';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import DatePlateFilter from '../components/shared/DatePlateFilter';
@@ -54,9 +55,17 @@ const typeColors = {
 export default function Expenses() {
   const { company, loading: compLoading } = useCompany();
   const navigate = useNavigate();
-  const [expenses, setExpenses] = useState([]);
-  const [vehicles, setVehicles] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isPending, refetch, makeSetter } = usePageData('expenses', company, async () => {
+    const [e, v] = await Promise.all([
+      base44.entities.Expense.filter({ company_id: company.id }),
+      base44.entities.Vehicle.filter({ company_id: company.id }),
+    ]);
+    return { expenses: e, vehicles: v };
+  });
+  const expenses = data?.expenses ?? [];
+  const vehicles = data?.vehicles ?? [];
+  const setExpenses = makeSetter('expenses');
+  const loadData = refetch;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const now = new Date();
@@ -75,21 +84,6 @@ export default function Expenses() {
   useEffect(() => {
     if (!compLoading && !company) navigate(createPageUrl('CompanySetup'));
   }, [compLoading, company, navigate]);
-
-  useEffect(() => {
-    if (!company) return;
-    loadData();
-  }, [company]);
-
-  const loadData = async () => {
-    const [e, v] = await Promise.all([
-      base44.entities.Expense.filter({ company_id: company.id }),
-      base44.entities.Vehicle.filter({ company_id: company.id }),
-    ]);
-    setExpenses(e);
-    setVehicles(v);
-    setLoading(false);
-  };
 
   const openNew = () => {
     setEditing(null);
@@ -159,7 +153,7 @@ export default function Expenses() {
   const total = filtered.reduce((s, e) => s + (e.amount || 0), 0);
   const fmt = (n) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-  if (compLoading || loading) {
+  if (compLoading || isPending) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />

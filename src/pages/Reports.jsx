@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useCompany } from '../components/hooks/useCompany';
+import { usePageData } from '../components/hooks/usePageData';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { createPageUrl } from '@/utils';
@@ -24,12 +25,21 @@ const printStyles = `
 export default function Reports() {
   const { company, loading: compLoading } = useCompany();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [vehicles, setVehicles] = useState([]);
-  const [drivers, setDrivers] = useState([]);
-  const [expenses, setExpenses] = useState([]);
-  const [fuelings, setFuelings] = useState([]);
-  const [billings, setBillings] = useState([]);
+  const { data, isPending } = usePageData('reports', company, async () => {
+    const [v, d, e, f, b] = await Promise.all([
+      base44.entities.Vehicle.filter({ company_id: company.id }),
+      base44.entities.Driver.filter({ company_id: company.id }),
+      base44.entities.Expense.filter({ company_id: company.id }),
+      base44.entities.Fueling.filter({ company_id: company.id }),
+      base44.entities.Billing.filter({ company_id: company.id }),
+    ]);
+    return { vehicles: v, drivers: d, expenses: e, fuelings: f, billings: b };
+  });
+  const vehicles = data?.vehicles ?? [];
+  const drivers = data?.drivers ?? [];
+  const expenses = data?.expenses ?? [];
+  const fuelings = data?.fuelings ?? [];
+  const billings = data?.billings ?? [];
   const now = new Date();
   const firstDay = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
   const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
@@ -40,27 +50,6 @@ export default function Reports() {
   useEffect(() => {
     if (!compLoading && !company) navigate(createPageUrl('CompanySetup'));
   }, [compLoading, company, navigate]);
-
-  useEffect(() => {
-    if (!company) return;
-    loadData();
-  }, [company]);
-
-  const loadData = async () => {
-    const [v, d, e, f, b] = await Promise.all([
-      base44.entities.Vehicle.filter({ company_id: company.id }),
-      base44.entities.Driver.filter({ company_id: company.id }),
-      base44.entities.Expense.filter({ company_id: company.id }),
-      base44.entities.Fueling.filter({ company_id: company.id }),
-      base44.entities.Billing.filter({ company_id: company.id }),
-    ]);
-    setVehicles(v);
-    setDrivers(d);
-    setExpenses(e);
-    setFuelings(f);
-    setBillings(b);
-    setLoading(false);
-  };
 
   const applyFilter = (items) => items.filter(item => {
     if (selectedPlate && selectedPlate !== 'all' && item.vehicle_plate !== selectedPlate) return false;
@@ -135,7 +124,7 @@ export default function Reports() {
   });
   const barData = Object.values(monthlyData).sort((a, b) => a.month.localeCompare(b.month));
 
-  if (compLoading || loading) return (
+  if (compLoading || isPending) return (
     <div className="flex items-center justify-center h-full">
       <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
     </div>

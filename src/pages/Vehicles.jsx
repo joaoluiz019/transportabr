@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useCompany } from '../components/hooks/useCompany';
+import { usePageData } from '../components/hooks/usePageData';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import EmptyState from '../components/shared/EmptyState';
@@ -17,9 +18,17 @@ import PullToRefresh from '../components/layout/PullToRefresh';
 export default function Vehicles() {
   const { company, loading: compLoading } = useCompany();
   const navigate = useNavigate();
-  const [vehicles, setVehicles] = useState([]);
-  const [drivers, setDrivers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isPending, refetch, makeSetter } = usePageData('vehicles', company, async () => {
+    const [v, d] = await Promise.all([
+      base44.entities.Vehicle.filter({ company_id: company.id }),
+      base44.entities.Driver.filter({ company_id: company.id }),
+    ]);
+    return { vehicles: v, drivers: d };
+  });
+  const vehicles = data?.vehicles ?? [];
+  const drivers = data?.drivers ?? [];
+  const setVehicles = makeSetter('vehicles');
+  const loadData = refetch;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState(null);
   const [search, setSearch] = useState('');
@@ -31,21 +40,6 @@ export default function Vehicles() {
   useEffect(() => {
     if (!compLoading && !company) navigate(createPageUrl('CompanySetup'));
   }, [compLoading, company, navigate]);
-
-  useEffect(() => {
-    if (!company) return;
-    loadData();
-  }, [company]);
-
-  const loadData = async () => {
-    const [v, d] = await Promise.all([
-      base44.entities.Vehicle.filter({ company_id: company.id }),
-      base44.entities.Driver.filter({ company_id: company.id }),
-    ]);
-    setVehicles(v);
-    setDrivers(d);
-    setLoading(false);
-  };
 
   const openNew = () => {
     setEditingVehicle(null);
@@ -111,7 +105,7 @@ export default function Vehicles() {
     inactive: 'bg-slate-100 text-slate-600'
   };
 
-  if (compLoading || loading) {
+  if (compLoading || isPending) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />

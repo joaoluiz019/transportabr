@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useCompany } from '../components/hooks/useCompany';
-import { useNavigate, Link } from 'react-router-dom';
+import { usePageData } from '../components/hooks/usePageData';
+import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import EmptyState from '../components/shared/EmptyState';
 import { Input } from "@/components/ui/input";
@@ -16,10 +17,19 @@ import PullToRefresh from '../components/layout/PullToRefresh';
 export default function AdvancesPage() {
   const { company, loading: compLoading } = useCompany();
   const navigate = useNavigate();
-  const [advances, setAdvances] = useState([]);
-  const [drivers, setDrivers] = useState([]);
-  const [billings, setBillings] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isPending, refetch, makeSetter } = usePageData('advances', company, async () => {
+    const [a, d, b] = await Promise.all([
+      base44.entities.Advance.filter({ company_id: company.id }),
+      base44.entities.Driver.filter({ company_id: company.id }),
+      base44.entities.Billing.filter({ company_id: company.id }),
+    ]);
+    return { advances: a, drivers: d, billings: b };
+  });
+  const advances = data?.advances ?? [];
+  const drivers = data?.drivers ?? [];
+  const billings = data?.billings ?? [];
+  const setAdvances = makeSetter('advances');
+  const loadData = refetch;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
 
@@ -37,23 +47,6 @@ export default function AdvancesPage() {
   useEffect(() => {
     if (!compLoading && !company) navigate(createPageUrl('CompanySetup'));
   }, [compLoading, company, navigate]);
-
-  useEffect(() => {
-    if (!company) return;
-    loadData();
-  }, [company]);
-
-  const loadData = async () => {
-    const [a, d, b] = await Promise.all([
-      base44.entities.Advance.filter({ company_id: company.id }),
-      base44.entities.Driver.filter({ company_id: company.id }),
-      base44.entities.Billing.filter({ company_id: company.id }),
-    ]);
-    setAdvances(a);
-    setDrivers(d);
-    setBillings(b);
-    setLoading(false);
-  };
 
   const openNew = () => {
     setEditing(null);
@@ -132,7 +125,7 @@ export default function AdvancesPage() {
 
   const fmt = (n) => (n || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-  if (compLoading || loading) {
+  if (compLoading || isPending) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />

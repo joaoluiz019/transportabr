@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useCompany } from '../components/hooks/useCompany';
+import { usePageData } from '../components/hooks/usePageData';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import DatePlateFilter from '../components/shared/DatePlateFilter';
@@ -17,9 +18,16 @@ import { FileText, Plus, Pencil, Trash2, Loader2, ArrowLeft } from 'lucide-react
 export default function BillingPage() {
   const { company, loading: compLoading } = useCompany();
   const navigate = useNavigate();
-  const [billings, setBillings] = useState([]);
-  const [vehicles, setVehicles] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isPending, makeSetter } = usePageData('billings', company, async () => {
+    const [b, v] = await Promise.all([
+      base44.entities.Billing.filter({ company_id: company.id }),
+      base44.entities.Vehicle.filter({ company_id: company.id }),
+    ]);
+    return { billings: b, vehicles: v };
+  });
+  const billings = data?.billings ?? [];
+  const vehicles = data?.vehicles ?? [];
+  const setBillings = makeSetter('billings');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const now = new Date();
@@ -35,21 +43,6 @@ export default function BillingPage() {
   useEffect(() => {
     if (!compLoading && !company) navigate(createPageUrl('CompanySetup'));
   }, [compLoading, company, navigate]);
-
-  useEffect(() => {
-    if (!company) return;
-    loadData();
-  }, [company]);
-
-  const loadData = async () => {
-    const [b, v] = await Promise.all([
-      base44.entities.Billing.filter({ company_id: company.id }),
-      base44.entities.Vehicle.filter({ company_id: company.id }),
-    ]);
-    setBillings(b);
-    setVehicles(v);
-    setLoading(false);
-  };
 
   const openNew = () => {
     setEditing(null);
@@ -103,7 +96,7 @@ export default function BillingPage() {
   const total = filtered.reduce((s, b) => s + (b.amount || 0), 0);
   const fmt = (n) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-  if (compLoading || loading) {
+  if (compLoading || isPending) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
